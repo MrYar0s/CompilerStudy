@@ -26,11 +26,6 @@ void init(unsigned int width, unsigned int height)
     GlobalWindow.create(sf::VideoMode(width * PIXEL_SIZE, height * PIXEL_SIZE), "Game Of Life!");
 }
 
-int isOpen()
-{
-    return GlobalWindow.isOpen();
-}
-
 void flush()
 {
     GlobalWindow.clear();

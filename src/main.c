@@ -48,7 +48,7 @@ int main(int argc, char *argv[])
     init(WIDTH_NUM, HEIGHT_NUM);
     draw(prev_gen);
     display();
-    while (isOpen() == 1) {
+    while (1) {
         flush();
         calc(prev_gen, curr_gen);
         draw(curr_gen);

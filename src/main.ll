@@ -286,29 +286,21 @@ define dso_local i32 @main(i32 noundef %0, i8** noundef %1) #0 {
   call void (...) @display()
   br label %41
 
-41:                                               ; preds = %44, %39
-  %42 = call i32 (...) @isOpen()
-  %43 = icmp eq i32 %42, 1
-  br i1 %43, label %44, label %51
-
-44:                                               ; preds = %41
+41:                                               ; preds = %39, %41
   call void (...) @flush()
-  %45 = load i32*, i32** %8, align 8
-  %46 = load i32*, i32** %9, align 8
-  call void @calc(i32* noundef %45, i32* noundef %46)
-  %47 = load i32*, i32** %9, align 8
-  call void @draw(i32* noundef %47)
+  %42 = load i32*, i32** %8, align 8
+  %43 = load i32*, i32** %9, align 8
+  call void @calc(i32* noundef %42, i32* noundef %43)
+  %44 = load i32*, i32** %9, align 8
+  call void @draw(i32* noundef %44)
   call void (...) @display()
-  %48 = load i32*, i32** %8, align 8
-  store i32* %48, i32** %12, align 8
-  %49 = load i32*, i32** %9, align 8
-  store i32* %49, i32** %8, align 8
-  %50 = load i32*, i32** %12, align 8
-  store i32* %50, i32** %9, align 8
-  br label %41, !llvm.loop !15
-
-51:                                               ; preds = %41
-  ret i32 0
+  %45 = load i32*, i32** %8, align 8
+  store i32* %45, i32** %12, align 8
+  %46 = load i32*, i32** %9, align 8
+  store i32* %46, i32** %8, align 8
+  %47 = load i32*, i32** %12, align 8
+  store i32* %47, i32** %9, align 8
+  br label %41
 }
 
 declare i32 @generate(...) #1
@@ -316,8 +308,6 @@ declare i32 @generate(...) #1
 declare void @init(i32 noundef, i32 noundef) #1
 
 declare void @display(...) #1
-
-declare i32 @isOpen(...) #1
 
 declare void @flush(...) #1
 
@@ -342,4 +332,3 @@ attributes #1 = { "frame-pointer"="all" "no-trapping-math"="true" "stack-protect
 !12 = distinct !{!12, !7}
 !13 = distinct !{!13, !7}
 !14 = distinct !{!14, !7}
-!15 = distinct !{!15, !7}

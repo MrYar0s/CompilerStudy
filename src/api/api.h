@@ -10,7 +10,6 @@ extern "C" {
 
 int generate();
 void init(unsigned int width, unsigned int height);
-int isOpen();
 void flush();
 void setPixel(unsigned int x, unsigned int y, int is_alive);
 void display();
