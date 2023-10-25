@@ -7,6 +7,6 @@ set(LIBRARY_SOURCES
 	api.cpp
 )
 
-add_library(sfml_api STATIC ${LIBRARY_SOURCES})
+add_library(sfml_api SHARED ${LIBRARY_SOURCES})
 
 target_link_libraries(sfml_api PRIVATE ${SFML_LIBS})

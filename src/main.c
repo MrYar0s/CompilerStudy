@@ -49,7 +49,6 @@ int main(int argc, char *argv[])
     draw(prev_gen);
     display();
     while (1) {
-        flush();
         calc(prev_gen, curr_gen);
         draw(curr_gen);
         display();

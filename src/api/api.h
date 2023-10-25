@@ -2,7 +2,7 @@
 #define API_H
 
 #define HEIGHT_NUM 400
-#define WIDTH_NUM 500
+#define WIDTH_NUM 400
 
 #ifdef __cplusplus
 extern "C" {
@@ -10,7 +10,6 @@ extern "C" {
 
 int generate();
 void init(unsigned int width, unsigned int height);
-void flush();
 void setPixel(unsigned int x, unsigned int y, int is_alive);
 void display();
 
