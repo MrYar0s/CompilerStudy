@@ -1,4 +1,6 @@
+#include <cstdlib>
 #include <memory>
+
 #include "llvm/IR/Value.h"
 #include "llvm/IR/DerivedTypes.h"
 #include "llvm/IR/LLVMContext.h"
@@ -8,11 +10,20 @@
 #include "llvm/Support/TargetSelect.h"
 #include "llvm/ExecutionEngine/ExecutionEngine.h"
 #include "llvm/ExecutionEngine/GenericValue.h"
+
 #include "api.h"
 
 using namespace llvm;
 
-int main() {
+int main(int argc, char *argv[]) {
+	bool isNeedToRun = true;
+	{
+		// To disable interpreter pass 0 value as input parameter in program
+		if (argc > 1) {
+			isNeedToRun = static_cast<bool>(atoi(argv[1]));
+		}
+	}
+
 	LLVMContext ctx;
 	// ; ModuleID = 'main.c'
 	// source_filename = "main.c"
@@ -582,31 +593,33 @@ int main() {
 	module->print(outs(), nullptr);
 
 	// Interpreter of LLVM IR
-	outs() << "Running code...\n";
-	InitializeNativeTarget();
-	InitializeNativeTargetAsmPrinter();
+	if (isNeedToRun) {
+		outs() << "Running code...\n";
+		InitializeNativeTarget();
+		InitializeNativeTargetAsmPrinter();
 
-	ExecutionEngine *ee = EngineBuilder(std::unique_ptr<Module>(module)).create();
-	ee->InstallLazyFunctionCreator([&](const std::string &fnName) -> void * {
-		if (fnName == "setPixel") {
-			return reinterpret_cast<void *>(setPixel);
-		}
-		if (fnName == "generate") {
-			return reinterpret_cast<void *>(generate);
-		}
-		if (fnName == "init") {
-			return reinterpret_cast<void *>(init);
-		}
-		if (fnName == "display") {
-			return reinterpret_cast<void *>(display);
-		}
-		return nullptr;
-	});
-	ee->finalizeObject();
+		ExecutionEngine *ee = EngineBuilder(std::unique_ptr<Module>(module)).create();
+		ee->InstallLazyFunctionCreator([&](const std::string &fnName) -> void * {
+			if (fnName == "setPixel") {
+				return reinterpret_cast<void *>(setPixel);
+			}
+			if (fnName == "generate") {
+				return reinterpret_cast<void *>(generate);
+			}
+			if (fnName == "init") {
+				return reinterpret_cast<void *>(init);
+			}
+			if (fnName == "display") {
+				return reinterpret_cast<void *>(display);
+			}
+			return nullptr;
+		});
+		ee->finalizeObject();
 
-	ArrayRef<GenericValue> noargs;
-	GenericValue v = ee->runFunction(mainFunc, noargs);
+		ArrayRef<GenericValue> noargs;
+		GenericValue v = ee->runFunction(mainFunc, noargs);
 
-	outs() << "Code was run\n";
+		outs() << "Code was run\n";
+	}
 	return 0;
 }

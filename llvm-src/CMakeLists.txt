@@ -10,3 +10,8 @@ add_custom_target(run_llvm_app
 	${CMAKE_CURRENT_BINARY_DIR}/llvm_asm_app
 	DEPENDS llvm_asm_app
 )
+
+add_custom_target(get_llvm_app_ir
+	COMMAND ${CMAKE_CURRENT_BINARY_DIR}/llvm_asm_app 0
+	DEPENDS llvm_asm_app
+)
