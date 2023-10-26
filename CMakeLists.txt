@@ -24,5 +24,9 @@ add_custom_target(
 		COMMAND ${Python3_EXECUTABLE} ${PROJECT_SCRIPTS}/run_clang_format.py ${PROJECT_ROOT}
 )
 
+find_package(LLVM REQUIRED)
+message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
+
 add_subdirectory(llvm-pass)
 add_subdirectory(src)
+add_subdirectory(llvm-src)

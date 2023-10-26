@@ -33,7 +33,7 @@ void calc(int *prev_gen, int *curr_gen)
     }
 }
 
-int main(int argc, char *argv[])
+int main()
 {
     int prev_gen_arr[HEIGHT_NUM * WIDTH_NUM];
     int curr_gen_arr[HEIGHT_NUM * WIDTH_NUM];
