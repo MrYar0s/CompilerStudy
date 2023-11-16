@@ -1,0 +1,86 @@
+General design: DestFirst-SourceSecond
+
+Instructions:
+	-	XOR
+	Signature: XOR x1 x2 x3
+	Description: x1 = x2 ^ x3
+	
+	-	B
+	Signature: B label
+	Description: jump to label
+
+	-	MUL
+	Signature: MULi x1 x2 x3
+	Description: x1 = x2 * x3
+
+	-	MULi
+	Signature: MULi x1 x2 imm
+	Description: x1 = x2 * imm
+
+	-	INC_EQ
+	Signature: INC_EQ x1 x2 imm
+	Description: x1 = ((x2++) == imm)
+
+	-	BR_COND
+	Signature: BR_COND x1 label1 label2
+	Description: br x1, label1, label2
+
+	-	ADD
+	Signature: ADD x1 x2 x3
+	Description: x1 = x2 + x3
+
+	-	ADDi
+	Signature: ADD x1 x2 imm
+	Description: x1 = x2 + imm
+
+	-	GET_ELEM_PTR
+	Signature: GET_ELEM_PTR x1 x2 x3
+	Description: x1 = getelementptr ptr structure or data type x2, offset x3
+
+	-	GET_ELEM_PTRi
+	Signature: GET_ELEM_PTRi x1 x2 imm
+	Description: x1 = getelementptr ptr structure or data type x2, offset imm
+
+	-	LOAD
+	Signature: LOAD x1 x2
+	Description: x1 = load ptr x2
+
+	-	SET_PIXEL
+	Signature: SET_PIXEL x1 x2 x3
+	Description: call set_pixel x1, x2, x3
+
+	- MODi
+	Signature: MODi x1 x2 imm
+	Description: x1 = x2 % imm
+
+	-	SEXT
+	Signature: SEXT x1 x2
+	Description: x2 sign extend to i32 and put into x1
+
+	- ZEXT
+	Signature: ZEXT x1 x2
+	Description: x2 zero extend to i64 and put into x1
+
+	- SELECT_FALSE
+	Signature: SELECT_FALSE x1 x2 x3
+	Description: x1 = if (x2) { x3 } else { false }
+
+	- ICMP_EQ
+	Signature: icmp eq x1 x2 imm
+	Description: x1 = (x2 == imm)
+
+	-	OR
+	Signature: OR x1 x2 x3
+	Description: x1 = x2 | x3
+
+	- STORE
+	Signature: STORE x1 x2
+	Description: "*x1 = x2"
+
+	- ALLOCA
+	Signature: ALLOCA_I32 x1 size
+	Description: allocate array with type i32 with size and put pointer in x1
+
+	- BITCAST_I8
+	Signature: BITCAST_I8 x1 x2
+	Description: convert x2 to i8 and put into x1
