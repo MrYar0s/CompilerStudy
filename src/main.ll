@@ -32,7 +32,7 @@ define dso_local void @draw(i32* nocapture noundef readonly %0) {
 
 declare void @llvm.lifetime.start.p0i8(i64 immarg, i8* nocapture)
 
-declare void @setPixel(i32 noundef, i32 noundef, i32 noundef) local_unnamed_addr
+declare void @setPixel(i32 noundef, i32 noundef, i32 noundef)
 
 define dso_local void @calc(i32* nocapture noundef readonly %0, i32* nocapture noundef writeonly %1) {
   br label %3
@@ -135,7 +135,7 @@ define dso_local void @calc(i32* nocapture noundef readonly %0, i32* nocapture n
   br i1 %90, label %19, label %22
 }
 
-define dso_local i32 @main() local_unnamed_addr {
+define dso_local i32 @main() {
   %1 = alloca [160000 x i32], align 16
   %2 = alloca [160000 x i32], align 16
   %3 = bitcast [160000 x i32]* %1 to i8*
@@ -143,85 +143,41 @@ define dso_local i32 @main() local_unnamed_addr {
   %5 = getelementptr inbounds [160000 x i32], [160000 x i32]* %1, i64 0, i64 0
   br label %6
 
-6:                                                ; preds = %0, %27
-  %7 = phi i64 [ 0, %0 ], [ %28, %27 ]
+6:                                                ; preds = %0, %11
+  %7 = phi i64 [ 0, %0 ], [ %12, %11 ]
   %8 = mul nuw nsw i64 %7, 400
-  br label %30
+  br label %14
 
-9:                                                ; preds = %27
+9:                                                ; preds = %11
+  %10 = getelementptr inbounds [160000 x i32], [160000 x i32]* %2, i64 0, i64 0
   tail call void @init(i32 noundef 400, i32 noundef 400)
-  br label %10
-
-10:                                               ; preds = %14, %9
-  %11 = phi i64 [ 0, %9 ], [ %15, %14 ]
-  %12 = mul nuw nsw i64 %11, 400
-  %13 = trunc i64 %11 to i32
-  br label %17
-
-14:                                               ; preds = %17
-  %15 = add nuw nsw i64 %11, 1
-  %16 = icmp eq i64 %15, 400
-  br i1 %16, label %25, label %10
-
-17:                                               ; preds = %17, %10
-  %18 = phi i64 [ 0, %10 ], [ %23, %17 ]
-  %19 = add nuw nsw i64 %18, %12
-  %20 = getelementptr inbounds [160000 x i32], [160000 x i32]* %1, i64 0, i64 %19
-  %21 = load i32, i32* %20, align 4
-  %22 = trunc i64 %18 to i32
-  tail call void @setPixel(i32 noundef %22, i32 noundef %13, i32 noundef %21)
-  %23 = add nuw nsw i64 %18, 1
-  %24 = icmp eq i64 %23, 400
-  br i1 %24, label %14, label %17
-
-25:                                               ; preds = %14
-  %26 = getelementptr inbounds [160000 x i32], [160000 x i32]* %2, i64 0, i64 0
-  br label %38
-
-27:                                               ; preds = %30
-  %28 = add nuw nsw i64 %7, 1
-  %29 = icmp eq i64 %28, 400
-  br i1 %29, label %9, label %6
-
-30:                                               ; preds = %6, %30
-  %31 = phi i64 [ 0, %6 ], [ %36, %30 ]
-  %32 = tail call i32 (...) @generate()
-  %33 = srem i32 %32, 2
-  %34 = add nuw nsw i64 %31, %8
-  %35 = getelementptr inbounds [160000 x i32], [160000 x i32]* %1, i64 0, i64 %34
-  store i32 %33, i32* %35, align 4
-  %36 = add nuw nsw i64 %31, 1
-  %37 = icmp eq i64 %36, 400
-  br i1 %37, label %27, label %30
-
-38:                                               ; preds = %45, %25
-  %39 = phi i32* [ %26, %25 ], [ %40, %45 ]
-  %40 = phi i32* [ %5, %25 ], [ %39, %45 ]
+  call void @draw(i32* noundef nonnull %5)
   tail call void (...) @display()
-  call void @calc(i32* noundef nonnull %40, i32* noundef %39)
-  br label %41
+  br label %22
 
-41:                                               ; preds = %45, %38
-  %42 = phi i64 [ 0, %38 ], [ %46, %45 ]
-  %43 = mul nuw nsw i64 %42, 400
-  %44 = trunc i64 %42 to i32
-  br label %48
+11:                                               ; preds = %14
+  %12 = add nuw nsw i64 %7, 1
+  %13 = icmp eq i64 %12 , 400
+  br i1 %13, label %9, label %6
 
-45:                                               ; preds = %48
-  %46 = add nuw nsw i64 %42, 1
-  %47 = icmp eq i64 %46, 400
-  br i1 %47, label %38, label %41
+14:                                               ; preds = %6, %14
+  %15 = phi i64 [ 0, %6 ], [ %20, %14 ]
+  %16 = tail call i32 (...) @generate()
+  %17 = srem i32 %16, 2
+  %18 = add nuw nsw i64 %15, %8
+  %19 = getelementptr inbounds [160000 x i32], [160000 x i32]* %1, i64 0, i64 %18
+  store i32 %17, i32* %19, align 4
+  %20 = add nuw nsw i64 %15, 1
+  %21 = icmp eq i64 %20, 400
+  br i1 %21, label %11, label %14
 
-48:                                               ; preds = %48, %41
-  %49 = phi i64 [ 0, %41 ], [ %54, %48 ]
-  %50 = add nuw nsw i64 %49, %43
-  %51 = getelementptr inbounds i32, i32* %39, i64 %50
-  %52 = load i32, i32* %51, align 4
-  %53 = trunc i64 %49 to i32
-  tail call void @setPixel(i32 noundef %53, i32 noundef %44, i32 noundef %52)
-  %54 = add nuw nsw i64 %49, 1
-  %55 = icmp eq i64 %54, 400
-  br i1 %55, label %45, label %48
+22:                                               ; preds = %22, %9
+  %23 = phi i32* [ %10, %9 ], [ %24, %22 ]
+  %24 = phi i32* [ %5, %9 ], [ %23, %22 ]
+  call void @calc(i32* noundef %24, i32* noundef %23)
+  call void @draw(i32* noundef %23)
+  tail call void (...) @display()
+  br label %22
 }
 
 declare i32 @generate(...)

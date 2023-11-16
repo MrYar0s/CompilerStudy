@@ -1,6 +1,6 @@
 #include "api/api.h"
 
-void draw(int *arr)
+static void draw(int *arr)
 {
     for (unsigned int i = 0; i < HEIGHT_NUM; i++) {
         for (unsigned int j = 0; j < WIDTH_NUM; j++) {
@@ -9,7 +9,7 @@ void draw(int *arr)
     }
 }
 
-void calc(int *prev_gen, int *curr_gen)
+static void calc(int *prev_gen, int *curr_gen)
 {
     for (int i = 0; i < HEIGHT_NUM; i++) {
         for (int j = 0; j < WIDTH_NUM; j++) {
