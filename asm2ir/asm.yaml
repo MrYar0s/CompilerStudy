@@ -4,7 +4,7 @@ Instructions:
 	-	XOR
 	Signature: XOR x1 x2 x3
 	Description: x1 = x2 ^ x3
-	
+
 	-	B
 	Signature: B label
 	Description: jump to label
@@ -33,14 +33,6 @@ Instructions:
 	Signature: ADD x1 x2 imm
 	Description: x1 = x2 + imm
 
-	-	GET_ELEM_PTR
-	Signature: GET_ELEM_PTR x1 x2 x3
-	Description: x1 = getelementptr ptr structure or data type x2, offset x3
-
-	-	GET_ELEM_PTRi
-	Signature: GET_ELEM_PTRi x1 x2 imm
-	Description: x1 = getelementptr ptr structure or data type x2, offset imm
-
 	-	LOAD
 	Signature: LOAD x1 x2 x3
 	Description: load element from array x2 (x3 pos) to x1
@@ -49,6 +41,26 @@ Instructions:
 	Signature: SET_PIXEL x1 x2 x3
 	Description: call set_pixel x1, x2, x3
 
+	-	INIT
+	Signature: INIT imm1 imm2
+	Description: initialize the window of imm1Ximm2 size
+
+	-	SWAP
+	Signature: SWAP x1 x2
+	Description: swap values of x1 and x2 registers
+
+	- DISPLAY
+	Signature: DISPLAY
+	Description: display the buffer which was fulled by SET_PIXEL
+
+	- GENERATE
+	Signature: GENERATE x1
+	Description: generate random value and put it into x1
+
+	- SET_PIXEL
+	Signature: SET_PIXEL x1 x2 x3
+	Description: set pixel value x3 on the position (x1,x2) -> (x,y)
+
 	- MODi
 	Signature: MODi x1 x2 imm
 	Description: x1 = x2 % imm
@@ -56,10 +68,6 @@ Instructions:
 	-	SEXT_FROMBOOL
 	Signature: SEXT x1 x2
 	Description: x2 sign extend to i32 and put into x1
-
-	- ZEXT
-	Signature: ZEXT x1 x2
-	Description: x2 zero extend to i64 and put into x1
 
 	- SELECT_FALSE
 	Signature: SELECT_FALSE x1 x2 x3
@@ -80,7 +88,3 @@ Instructions:
 	- ALLOCA
 	Signature: ALLOCA_I32 x1 size
 	Description: allocate array with type i32 with size and put pointer in x1
-
-	- BITCAST_I8
-	Signature: BITCAST_I8 x1 x2
-	Description: convert x2 to i8 and put into x1

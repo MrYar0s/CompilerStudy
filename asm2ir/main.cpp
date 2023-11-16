@@ -17,34 +17,32 @@
 using namespace llvm;
 
 enum InsnId_t {
-    DISPLAY,  // 0
+    DISPLAY,            // 0
 
-    GENERATE,  // 1r
-    B,         // imm
+    GENERATE,           // 1r
+    B,                  // imm
 
-    SWAP,    // 2r
-    SEXT_FROMBOOL,    // 2r
-    ALLOCA,  // 1r imm
-    INIT,    // imm imm
+    SWAP,               // 2r
+    SEXT_FROMBOOL,      // 2r
+    ALLOCA,             // 1r imm
+    INIT,               // imm imm
 
-    LOAD,          // 3r
-    STORE,         // 3r
-    XOR,           // 3r
-    MUL,           // 3r
-    ADD,           // 3r
-    GET_ELEM_PTR,  // 3r
-    SET_PIXEL,     // 3r
-    SELECT_FALSE,  // 3r
-    OR,            // 3r
+    LOAD,               // 3r
+    STORE,              // 3r
+    XOR,                // 3r
+    MUL,                // 3r
+    ADD,                // 3r
+    SET_PIXEL,          // 3r
+    SELECT_FALSE,       // 3r
+    OR,                 // 3r
 
-    MULi,           // 2r imm
-    INC_EQ,         // 2r imm
-    ADDi,           // 2r imm
-    GET_ELEM_PTRi,  // 2r imm
-    MODi,           // 2r imm
-    ICMP_EQ,        // 2r imm
+    MULi,               // 2r imm
+    INC_EQ,             // 2r imm
+    ADDi,               // 2r imm
+    MODi,               // 2r imm
+    ICMP_EQ,            // 2r imm
 
-    BR_COND,  // 1r label1 label2
+    BR_COND             // 1r label1 label2
 };
 
 ///////////////////////
@@ -66,7 +64,6 @@ public:
         // for (int i = 0; i < REG_FILE_SIZE; i++) {
         //     outs() << "[" << i << "] " << REG_FILE[i] << "\n";
         // }
-        // outs() << "[" << 37 << "] " << REG_FILE[37] << "\n";
     }
 };
 
@@ -217,16 +214,6 @@ void do_add(CPU *cpu, Instr *instr)
     instr->dump();
     cpu->dump();
     cpu->REG_FILE[instr->m_rs1] = cpu->REG_FILE[instr->m_rs2] + cpu->REG_FILE[instr->m_rs3];
-    // outs() << "do_add" << "\n";
-    // outs() << "cpu->REG_FILE[instr->m_rs1]: " << cpu->REG_FILE[instr->m_rs1] << " instr->m_rs1 " << (RegVal_t)instr->m_rs1 << "\n";
-    // outs() << "cpu->REG_FILE[instr->m_rs2]: " << cpu->REG_FILE[instr->m_rs2] << " instr->m_rs2 " << (RegVal_t)instr->m_rs2 << "\n";
-    // outs() << "cpu->REG_FILE[instr->m_rs3]: " << cpu->REG_FILE[instr->m_rs3] << " instr->m_rs3 " << (RegVal_t)instr->m_rs3 << "\n";
-}
-void do_gep(CPU *cpu, Instr *instr)
-{
-    instr->dump();
-    cpu->dump();
-    cpu->REG_FILE[instr->m_rs1] = cpu->REG_FILE[instr->m_rs2] + cpu->REG_FILE[instr->m_rs3]*sizeof(RegVal_t);
 }
 void do_setPixel(CPU *cpu, Instr *instr)
 {
@@ -256,10 +243,6 @@ void do_addi(CPU *cpu, Instr *instr)
     instr->dump();
     cpu->dump();
     cpu->REG_FILE[instr->m_rs1] = cpu->REG_FILE[instr->m_rs2] + instr->m_imm;
-    // outs() << "do_addi" << "\n";
-    // outs() << "cpu->REG_FILE[instr->m_rs1]: " << cpu->REG_FILE[instr->m_rs1] << " instr->m_rs1 " << (RegVal_t)instr->m_rs1 << "\n";
-    // outs() << "cpu->REG_FILE[instr->m_rs2]: " << cpu->REG_FILE[instr->m_rs2] << " instr->m_rs2 " << (RegVal_t)instr->m_rs2 << "\n";
-    // outs() << "instr->m_imm: " << instr->m_imm << "\n";
 }
 void do_muli(CPU *cpu, Instr *instr)
 {
@@ -273,12 +256,6 @@ void do_incEq(CPU *cpu, Instr *instr)
     cpu->dump();
     cpu->REG_FILE[instr->m_rs2] += 1;
     cpu->REG_FILE[instr->m_rs1] = cpu->REG_FILE[instr->m_rs2] == instr->m_imm;
-}
-void do_gepi(CPU *cpu, Instr *instr)
-{
-    instr->dump();
-    cpu->dump();
-    cpu->REG_FILE[instr->m_rs1] = cpu->REG_FILE[instr->m_rs2] + instr->m_imm*sizeof(RegVal_t);
 }
 void do_modi(CPU *cpu, Instr *instr)
 {
@@ -326,7 +303,7 @@ int main(int argc, char *argv[])
         // 3 args
         if (!name.compare("XOR") || !name.compare("MUL") || !name.compare("MULi") || !name.compare("INC_EQ") ||
             !name.compare("BR_COND") || !name.compare("ADD") || !name.compare("ADDi") ||
-            !name.compare("GET_ELEM_PTR") || !name.compare("GET_ELEM_PTRi") || !name.compare("SET_PIXEL") ||
+            !name.compare("SET_PIXEL") ||
             !name.compare("MODi") || !name.compare("ICMP_EQ") || !name.compare("SELECT_FALSE") || !name.compare("OR") ||
             !name.compare("LOAD") || !name.compare("STORE")) {
             input >> arg >> arg >> arg;
@@ -436,7 +413,7 @@ int main(int argc, char *argv[])
         }
 
         // 3 registers
-        if (!name.compare("LOAD") || !name.compare("STORE") || !name.compare("XOR") || !name.compare("MUL") || !name.compare("ADD") || !name.compare("GET_ELEM_PTR") ||
+        if (!name.compare("LOAD") || !name.compare("STORE") || !name.compare("XOR") || !name.compare("MUL") || !name.compare("ADD") ||
             !name.compare("SET_PIXEL") || !name.compare("SELECT_FALSE") || !name.compare("OR")) {
             input >> arg1 >> arg2 >> arg3;
             outs() << " " << arg1 << " " << arg2 << " " << arg3 << "\n";
@@ -458,9 +435,6 @@ int main(int argc, char *argv[])
             if (!name.compare("ADD")) {
                 Instructions.push_back(new Instr(InsnId_t::ADD, do_add, name, rs1, rs2, rs3));
             }
-            if (!name.compare("GET_ELEM_PTR")) {
-                Instructions.push_back(new Instr(InsnId_t::GET_ELEM_PTR, do_gep, name, rs1, rs2, rs3));
-            }
             if (!name.compare("SET_PIXEL")) {
                 Instructions.push_back(new Instr(InsnId_t::SET_PIXEL, do_setPixel, name, rs1, rs2, rs3));
             }
@@ -475,7 +449,7 @@ int main(int argc, char *argv[])
 
         // 2 registers and imm
         if (!name.compare("MULi") || !name.compare("INC_EQ") || !name.compare("ADDi") ||
-            !name.compare("GET_ELEM_PTRi") || !name.compare("MODi") || !name.compare("ICMP_EQ")) {
+            !name.compare("MODi") || !name.compare("ICMP_EQ")) {
             input >> arg1 >> arg2 >> arg3;
             outs() << " " << arg1 << " " << arg2 << " " << arg3 << "\n";
             RegId_t rs1 = stoi(arg1.erase(0, 1));
@@ -489,9 +463,6 @@ int main(int argc, char *argv[])
             }
             if (!name.compare("ADDi")) {
                 Instructions.push_back(new Instr(InsnId_t::ADDi, do_addi, name, rs1, rs2, imm));
-            }
-            if (!name.compare("GET_ELEM_PTRi")) {
-                Instructions.push_back(new Instr(InsnId_t::GET_ELEM_PTRi, do_gepi, name, rs1, rs2, imm));
             }
             if (!name.compare("MODi")) {
                 Instructions.push_back(new Instr(InsnId_t::MODi, do_modi, name, rs1, rs2, imm));
