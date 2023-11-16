@@ -2,5 +2,5 @@
 
 void instrLog(char *funcName)
 {
-	printf("%s\n", funcName);
+    printf("%s\n", funcName);
 }
