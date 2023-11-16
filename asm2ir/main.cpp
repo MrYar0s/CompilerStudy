@@ -17,32 +17,32 @@
 using namespace llvm;
 
 enum InsnId_t {
-    DISPLAY,            // 0
+    DISPLAY,  // 0
 
-    GENERATE,           // 1r
-    B,                  // imm
+    GENERATE,  // 1r
+    B,         // imm
 
-    SWAP,               // 2r
-    SEXT_FROMBOOL,      // 2r
-    ALLOCA,             // 1r imm
-    INIT,               // imm imm
+    SWAP,           // 2r
+    SEXT_FROMBOOL,  // 2r
+    ALLOCA,         // 1r imm
+    INIT,           // imm imm
 
-    LOAD,               // 3r
-    STORE,              // 3r
-    XOR,                // 3r
-    MUL,                // 3r
-    ADD,                // 3r
-    SET_PIXEL,          // 3r
-    SELECT_FALSE,       // 3r
-    OR,                 // 3r
+    LOAD,          // 3r
+    STORE,         // 3r
+    XOR,           // 3r
+    MUL,           // 3r
+    ADD,           // 3r
+    SET_PIXEL,     // 3r
+    SELECT_FALSE,  // 3r
+    OR,            // 3r
 
-    MULi,               // 2r imm
-    INC_EQ,             // 2r imm
-    ADDi,               // 2r imm
-    MODi,               // 2r imm
-    ICMP_EQ,            // 2r imm
+    MULi,     // 2r imm
+    INC_EQ,   // 2r imm
+    ADDi,     // 2r imm
+    MODi,     // 2r imm
+    ICMP_EQ,  // 2r imm
 
-    BR_COND             // 1r label1 label2
+    BR_COND  // 1r label1 label2
 };
 
 ///////////////////////
@@ -155,14 +155,16 @@ void do_load(CPU *cpu, Instr *instr)
 {
     instr->dump();
     cpu->dump();
-    RegVal_t *ptr = (RegVal_t *)static_cast<intptr_t>(cpu->REG_FILE[instr->m_rs2] + cpu->REG_FILE[instr->m_rs3]*sizeof(RegVal_t));
+    RegVal_t *ptr =
+        (RegVal_t *)static_cast<intptr_t>(cpu->REG_FILE[instr->m_rs2] + cpu->REG_FILE[instr->m_rs3] * sizeof(RegVal_t));
     cpu->REG_FILE[instr->m_rs1] = *ptr;
 }
 void do_store(CPU *cpu, Instr *instr)
 {
     instr->dump();
     cpu->dump();
-    RegVal_t *ptr = (RegVal_t *)static_cast<intptr_t>(cpu->REG_FILE[instr->m_rs1] + cpu->REG_FILE[instr->m_rs2]*sizeof(RegVal_t));
+    RegVal_t *ptr =
+        (RegVal_t *)static_cast<intptr_t>(cpu->REG_FILE[instr->m_rs1] + cpu->REG_FILE[instr->m_rs2] * sizeof(RegVal_t));
     *ptr = cpu->REG_FILE[instr->m_rs3];
 }
 void do_swap(CPU *cpu, Instr *instr)
@@ -280,11 +282,85 @@ void do_brCond(CPU *cpu, Instr *instr)
     }
 }
 
+void *lazyFunctionCreator(const std::string &fnName)
+{
+    if (fnName == "do_display") {
+        return reinterpret_cast<void *>(do_display);
+    }
+    if (fnName == "do_generate") {
+        return reinterpret_cast<void *>(do_generate);
+    }
+    if (fnName == "do_b") {
+        return reinterpret_cast<void *>(do_b);
+    }
+    if (fnName == "do_load") {
+        return reinterpret_cast<void *>(do_load);
+    }
+    if (fnName == "do_store") {
+        return reinterpret_cast<void *>(do_store);
+    }
+    if (fnName == "do_swap") {
+        return reinterpret_cast<void *>(do_swap);
+    }
+    if (fnName == "do_alloca") {
+        return reinterpret_cast<void *>(do_alloca);
+    }
+    if (fnName == "do_init") {
+        return reinterpret_cast<void *>(do_init);
+    }
+    if (fnName == "do_sextFromBool") {
+        return reinterpret_cast<void *>(do_sextFromBool);
+    }
+    if (fnName == "do_xor") {
+        return reinterpret_cast<void *>(do_xor);
+    }
+    if (fnName == "do_mul") {
+        return reinterpret_cast<void *>(do_mul);
+    }
+    if (fnName == "do_add") {
+        return reinterpret_cast<void *>(do_add);
+    }
+    if (fnName == "do_setPixel") {
+        return reinterpret_cast<void *>(do_setPixel);
+    }
+    if (fnName == "do_selectFalse") {
+        return reinterpret_cast<void *>(do_selectFalse);
+    }
+    if (fnName == "do_or") {
+        return reinterpret_cast<void *>(do_or);
+    }
+    if (fnName == "do_addi") {
+        return reinterpret_cast<void *>(do_addi);
+    }
+    if (fnName == "do_muli") {
+        return reinterpret_cast<void *>(do_muli);
+    }
+    if (fnName == "do_incEq") {
+        return reinterpret_cast<void *>(do_incEq);
+    }
+    if (fnName == "do_modi") {
+        return reinterpret_cast<void *>(do_modi);
+    }
+    if (fnName == "do_icmpEq") {
+        return reinterpret_cast<void *>(do_icmpEq);
+    }
+    if (fnName == "do_brCond") {
+        return reinterpret_cast<void *>(do_brCond);
+    }
+    return nullptr;
+}
+
 int main(int argc, char *argv[])
 {
-    if (argc != 2) {
+    if (argc < 2) {
         outs() << "[ERROR] Need 1 argument: file with assembler\n";
         return 1;
+    }
+    bool need_to_run_asm = false;
+    bool need_to_run_ir = false;
+    if (argc > 2) {
+        need_to_run_asm = atoi(argv[2]);
+        need_to_run_ir = !need_to_run_asm;
     }
     std::ifstream input;
     input.open(argv[1]);
@@ -301,30 +377,29 @@ int main(int argc, char *argv[])
     RegVal_t pc = 0;
     while (input >> name) {
         // 3 args
-        if (!name.compare("XOR") || !name.compare("MUL") || !name.compare("MULi") || !name.compare("INC_EQ") ||
-            !name.compare("BR_COND") || !name.compare("ADD") || !name.compare("ADDi") ||
-            !name.compare("SET_PIXEL") ||
-            !name.compare("MODi") || !name.compare("ICMP_EQ") || !name.compare("SELECT_FALSE") || !name.compare("OR") ||
-            !name.compare("LOAD") || !name.compare("STORE")) {
+        if (!name.compare("xor") || !name.compare("mul") || !name.compare("muli") || !name.compare("incEq") ||
+            !name.compare("brCond") || !name.compare("add") || !name.compare("addi") || !name.compare("setPixel") ||
+            !name.compare("modi") || !name.compare("icmpEq") || !name.compare("selectFalse") || !name.compare("or") ||
+            !name.compare("load") || !name.compare("store")) {
             input >> arg >> arg >> arg;
             pc++;
             continue;
         }
         // 2 args
-        if (!name.compare("ALLOCA") || !name.compare("SWAP") ||
-            !name.compare("INIT") || !name.compare("SEXT_FROMBOOL")) {
+        if (!name.compare("alloca") || !name.compare("swap") || !name.compare("init") ||
+            !name.compare("sextFromBool")) {
             input >> arg >> arg;
             pc++;
             continue;
         }
         // 1 arg
-        if (!name.compare("B") || !name.compare("GENERATE")) {
+        if (!name.compare("b") || !name.compare("generate")) {
             input >> arg;
             pc++;
             continue;
         }
         // 0 args
-        if (!name.compare("DISPLAY")) {
+        if (!name.compare("display")) {
             pc++;
             continue;
         }
@@ -344,143 +419,142 @@ int main(int argc, char *argv[])
     while (input >> name) {
         outs() << name;
         // 0 registers
-        if (!name.compare("DISPLAY")) {
+        if (!name.compare("display")) {
             Instructions.push_back(new Instr(InsnId_t::DISPLAY, do_display, name));
             outs() << "\n";
             continue;
         }
 
         // 1 register
-        if (!name.compare("GENERATE")) {
+        if (!name.compare("generate")) {
             input >> arg1;
             outs() << " " << arg1 << "\n";
             RegId_t rs1 = stoi(arg1.erase(0, 1));
-            if (!name.compare("GENERATE")) {
+            if (!name.compare("generate")) {
                 Instructions.push_back(new Instr(InsnId_t::GENERATE, do_generate, name, rs1));
             }
             continue;
         }
 
         // 1 label
-        if (!name.compare("B")) {
+        if (!name.compare("b")) {
             input >> arg1;
             outs() << " " << arg1 << "\n";
             RegVal_t imm = BB_PC[arg1];
-            outs() << " " << imm << "\n";
-            if (!name.compare("B")) {
+            if (!name.compare("b")) {
                 Instructions.push_back(new Instr(InsnId_t::B, do_b, name, imm));
             }
             continue;
         }
 
         // 2 registers
-        if (!name.compare("SWAP") || !name.compare("SEXT_FROMBOOL")) {
+        if (!name.compare("swap") || !name.compare("sextFromBool")) {
             input >> arg1 >> arg2;
             outs() << " " << arg1 << " " << arg2 << " " << arg3 << "\n";
             RegId_t rs1 = stoi(arg1.erase(0, 1));
             RegId_t rs2 = stoi(arg2.erase(0, 1));
-            if (!name.compare("SWAP")) {
+            if (!name.compare("swap")) {
                 Instructions.push_back(new Instr(InsnId_t::SWAP, do_swap, name, rs1, rs2));
             }
-            if (!name.compare("SEXT_FROMBOOL")) {
+            if (!name.compare("sextFromBool")) {
                 Instructions.push_back(new Instr(InsnId_t::SEXT_FROMBOOL, do_sextFromBool, name, rs1, rs2));
             }
             continue;
         }
 
         // 1 register 1 imm
-        if (!name.compare("ALLOCA")) {
+        if (!name.compare("alloca")) {
             input >> arg1 >> arg2;
             outs() << " " << arg1 << " " << arg2 << "\n";
             RegId_t rs1 = stoi(arg1.erase(0, 1));
             RegVal_t imm = stoi(arg2);
-            if (!name.compare("ALLOCA")) {
+            if (!name.compare("alloca")) {
                 Instructions.push_back(new Instr(InsnId_t::ALLOCA, do_alloca, name, rs1, imm));
             }
             continue;
         }
 
         // 2 imms
-        if (!name.compare("INIT")) {
+        if (!name.compare("init")) {
             input >> arg1 >> arg2;
             outs() << " " << arg1 << " " << arg2 << "\n";
             RegVal_t imm1 = stoi(arg2);
             RegVal_t imm2 = stoi(arg2);
-            if (!name.compare("INIT")) {
+            if (!name.compare("init")) {
                 Instructions.push_back(new Instr(InsnId_t::INIT, do_init, name, imm1, imm2));
             }
             continue;
         }
 
         // 3 registers
-        if (!name.compare("LOAD") || !name.compare("STORE") || !name.compare("XOR") || !name.compare("MUL") || !name.compare("ADD") ||
-            !name.compare("SET_PIXEL") || !name.compare("SELECT_FALSE") || !name.compare("OR")) {
+        if (!name.compare("load") || !name.compare("store") || !name.compare("xor") || !name.compare("mul") ||
+            !name.compare("add") || !name.compare("setPixel") || !name.compare("selectFalse") || !name.compare("or")) {
             input >> arg1 >> arg2 >> arg3;
             outs() << " " << arg1 << " " << arg2 << " " << arg3 << "\n";
             RegId_t rs1 = stoi(arg1.erase(0, 1));
             RegId_t rs2 = stoi(arg2.erase(0, 1));
             RegId_t rs3 = stoi(arg3.erase(0, 1));
-            if (!name.compare("LOAD")) {
+            if (!name.compare("load")) {
                 Instructions.push_back(new Instr(InsnId_t::LOAD, do_load, name, rs1, rs2, rs3));
             }
-            if (!name.compare("STORE")) {
+            if (!name.compare("store")) {
                 Instructions.push_back(new Instr(InsnId_t::STORE, do_store, name, rs1, rs2, rs3));
             }
-            if (!name.compare("XOR")) {
+            if (!name.compare("xor")) {
                 Instructions.push_back(new Instr(InsnId_t::XOR, do_xor, name, rs1, rs2, rs3));
             }
-            if (!name.compare("MUL")) {
+            if (!name.compare("mul")) {
                 Instructions.push_back(new Instr(InsnId_t::MUL, do_mul, name, rs1, rs2, rs3));
             }
-            if (!name.compare("ADD")) {
+            if (!name.compare("add")) {
                 Instructions.push_back(new Instr(InsnId_t::ADD, do_add, name, rs1, rs2, rs3));
             }
-            if (!name.compare("SET_PIXEL")) {
+            if (!name.compare("setPixel")) {
                 Instructions.push_back(new Instr(InsnId_t::SET_PIXEL, do_setPixel, name, rs1, rs2, rs3));
             }
-            if (!name.compare("SELECT_FALSE")) {
+            if (!name.compare("selectFalse")) {
                 Instructions.push_back(new Instr(InsnId_t::SELECT_FALSE, do_selectFalse, name, rs1, rs2, rs3));
             }
-            if (!name.compare("OR")) {
+            if (!name.compare("or")) {
                 Instructions.push_back(new Instr(InsnId_t::XOR, do_or, name, rs1, rs2, rs3));
             }
             continue;
         }
 
         // 2 registers and imm
-        if (!name.compare("MULi") || !name.compare("INC_EQ") || !name.compare("ADDi") ||
-            !name.compare("MODi") || !name.compare("ICMP_EQ")) {
+        if (!name.compare("muli") || !name.compare("incEq") || !name.compare("addi") || !name.compare("modi") ||
+            !name.compare("icmpEq")) {
             input >> arg1 >> arg2 >> arg3;
             outs() << " " << arg1 << " " << arg2 << " " << arg3 << "\n";
             RegId_t rs1 = stoi(arg1.erase(0, 1));
             RegId_t rs2 = stoi(arg2.erase(0, 1));
             RegVal_t imm = stoi(arg3);
-            if (!name.compare("MULi")) {
+            if (!name.compare("muli")) {
                 Instructions.push_back(new Instr(InsnId_t::MULi, do_muli, name, rs1, rs2, imm));
             }
-            if (!name.compare("INC_EQ")) {
+            if (!name.compare("incEq")) {
                 Instructions.push_back(new Instr(InsnId_t::INC_EQ, do_incEq, name, rs1, rs2, imm));
             }
-            if (!name.compare("ADDi")) {
+            if (!name.compare("addi")) {
                 Instructions.push_back(new Instr(InsnId_t::ADDi, do_addi, name, rs1, rs2, imm));
             }
-            if (!name.compare("MODi")) {
+            if (!name.compare("modi")) {
                 Instructions.push_back(new Instr(InsnId_t::MODi, do_modi, name, rs1, rs2, imm));
             }
-            if (!name.compare("ICMP_EQ")) {
+            if (!name.compare("icmpEq")) {
                 Instructions.push_back(new Instr(InsnId_t::ICMP_EQ, do_icmpEq, name, rs1, rs2, imm));
             }
             continue;
         }
 
         // register and 2 labels
-        if (!name.compare("BR_COND")) {
+        if (!name.compare("brCond")) {
             input >> arg1 >> arg2 >> arg3;
             outs() << " " << arg1 << " " << arg2 << " " << arg3 << "\n";
             RegId_t rs1 = stoi(arg1.erase(0, 1));
             RegVal_t imm1 = BB_PC[arg2];
             RegVal_t imm2 = BB_PC[arg3];
-            if (!name.compare("BR_COND")) {
+            if (!name.compare("brCond")) {
                 Instructions.push_back(new Instr(InsnId_t::BR_COND, do_brCond, name, rs1, imm1, imm2));
             }
             continue;
@@ -495,25 +569,138 @@ int main(int argc, char *argv[])
     }
     outs() << "#[FILE] END\n";
 
-    outs() << "\n#[EXEC] BEGIN\n";
+    if (need_to_run_asm) {
+        outs() << "\n#[EXEC] BEGIN\n";
+        CPU cpu;
+        for (int i = 0; i < REG_FILE_SIZE; i++) {
+            cpu.REG_FILE[i] = 0;
+        }
+        cpu.RUN = 1;
+        cpu.PC = 1;
+        // Loop execution
+        while (cpu.RUN) {
+            cpu.NEXT_PC = cpu.PC + 1;
+            Instructions[cpu.PC]->m_INSTR(&cpu, Instructions[cpu.PC]);
+            cpu.PC = cpu.NEXT_PC;
+        }
+        outs() << "#[EXEC] END\n";
+        // Dump registers after simulation
+        for (int i = 0; i < REG_FILE_SIZE; i++) {
+            outs() << "[" << i << "] " << cpu.REG_FILE[i] << "\n";
+        }
+    }
     CPU cpu;
-    for (int i = 0; i < REG_FILE_SIZE; i++) {
-        cpu.REG_FILE[i] = 0;
-    }
-    cpu.RUN = 1;
-    cpu.PC = 1;
-    // Loop execution
-    while (cpu.RUN) {
-        cpu.NEXT_PC = cpu.PC + 1;
-        Instructions[cpu.PC]->m_INSTR(&cpu, Instructions[cpu.PC]);
-        cpu.PC = cpu.NEXT_PC;
-    }
-    outs() << "#[EXEC] END\n";
+    // Build IR for application
+    outs() << "#[LLVM IR] BEGIN\n";
+    LLVMContext context;
+    // ; ModuleID = 'main'
+    // source_filename = "main"
+    Module *module = new Module("main", context);
+    IRBuilder<> builder(context);
 
-    // Dump registers after simulation
-    for (int i = 0; i < REG_FILE_SIZE; i++) {
-        outs() << "[" << i << "] " << cpu.REG_FILE[i] << "\n";
+    // declare void @main()
+    FunctionType *funcType = FunctionType::get(builder.getVoidTy(), false);
+    Function *mainFunc = Function::Create(funcType, Function::ExternalLinkage, "main", module);
+    // main_entry:
+    BasicBlock *main_entryBB = BasicBlock::Create(context, "main_entry", mainFunc);
+
+    builder.SetInsertPoint(main_entryBB);
+
+    // createCalleeFunctions(builder, module);
+    FunctionType *CalleType = FunctionType::get(
+        builder.getVoidTy(), std::vector<Type *>({builder.getInt8PtrTy(), builder.getInt8PtrTy()}), false);
+
+    // Get poointer to CPU for function args
+    Value *cpu_p = builder.getInt64((uint64_t)&cpu);
+    ArrayType *regFileType = ArrayType::get(builder.getInt64Ty(), REG_FILE_SIZE);
+    module->getOrInsertGlobal("regFile", regFileType);
+    GlobalVariable *regFile = module->getNamedGlobal("regFile");
+
+    std::unordered_map<RegVal_t, BasicBlock *> BBMap;
+
+    for (auto &name : BB_PC) {
+        BBMap[name.second] = BasicBlock::Create(context, name.first, mainFunc);
     }
 
+    for (RegVal_t PC = 1; PC < Instructions.size(); PC++) {
+        // Set IRBuilder to current BB
+        if (BBMap.find(PC) != BBMap.end()) {
+            // builder.CreateBr(BBMap[PC]);
+            builder.SetInsertPoint(BBMap[PC]);
+        }
+        // IR implementation for B instruction
+        if (Instructions[PC]->m_ID == B) {
+            builder.CreateBr(BBMap[Instructions[PC]->m_imm]);
+            continue;
+        }
+        // IR implementation for BR_COND instruction
+        if (Instructions[PC]->m_ID == BR_COND) {
+            // arg
+            Value *arg = builder.CreateConstGEP2_64(regFileType, regFile, 0, Instructions[PC]->m_rs1);
+            Value *cond = builder.CreateLoad(builder.getInt64Ty(), arg);
+            builder.CreateCondBr(cond, BBMap[Instructions[PC]->m_label1], BBMap[Instructions[PC]->m_label2]);
+            continue;
+        }
+        // IR implementation for ADD instruction
+        if (Instructions[PC]->m_ID == ADD) {
+            // res
+            Value *res_p = builder.CreateConstGEP2_64(regFileType, regFile, 0, Instructions[PC]->m_rs1);
+            // arg1
+            Value *arg1_p = builder.CreateConstGEP2_64(regFileType, regFile, 0, Instructions[PC]->m_rs2);
+            // arg2
+            Value *arg2_p = builder.CreateConstGEP2_64(regFileType, regFile, 0, Instructions[PC]->m_rs3);
+            Value *add_arg1_arg2 = builder.CreateAdd(builder.CreateLoad(builder.getInt64Ty(), arg1_p),
+                                                     builder.CreateLoad(builder.getInt64Ty(), arg2_p));
+            builder.CreateStore(add_arg1_arg2, res_p);
+            continue;
+        }
+        // IR implementation for ADDi instruction
+        if (Instructions[PC]->m_ID == ADDi) {
+            // res
+            Value *res_p = builder.CreateConstGEP2_64(regFileType, regFile, 0, Instructions[PC]->m_rs1);
+            // arg1
+            Value *arg1_p = builder.CreateConstGEP2_64(regFileType, regFile, 0, Instructions[PC]->m_rs2);
+            // arg2
+            Value *arg2 = builder.getInt64(Instructions[PC]->m_imm);
+            Value *add_arg1_arg2 = builder.CreateAdd(builder.CreateLoad(builder.getInt64Ty(), arg1_p), arg2);
+            builder.CreateStore(add_arg1_arg2, res_p);
+            continue;
+        }
+        // Get poointer to instruction for function args
+        Value *instr_p = builder.getInt64((uint64_t)Instructions[PC]);
+        // Call simulation function for other instructions
+        builder.CreateCall(module->getOrInsertFunction("do_" + Instructions[PC]->m_name, CalleType),
+                           std::vector<Value *>({cpu_p, instr_p}));
+    }
+    outs() << "#[LLVM IR] DUMP\n";
+    module->print(outs(), nullptr);
+    outs() << "#[LLVM IR] END\n";
+    if (need_to_run_ir) {
+        for (int i = 0; i < REG_FILE_SIZE; i++) {
+            cpu.REG_FILE[i] = 0;
+        }
+
+        // App simulation with execution engine
+        outs() << "#[LLVM EE] RUN\n";
+        InitializeNativeTarget();
+        InitializeNativeTargetAsmPrinter();
+
+        ExecutionEngine *ee = EngineBuilder(std::unique_ptr<Module>(module)).create();
+        ee->InstallLazyFunctionCreator(lazyFunctionCreator);
+        ee->addGlobalMapping(regFile, (void *)cpu.REG_FILE);
+        ee->finalizeObject();
+        ArrayRef<GenericValue> noargs;
+
+        cpu.RUN = 1;
+        cpu.PC = 1;
+        ee->runFunction(mainFunc, noargs);
+        outs() << "#[LLVM EE] END\n";
+
+        // Registers dump after simulation with EE
+        for (int i = 0; i < REG_FILE_SIZE; i++) {
+            outs() << "[" << i << "] " << cpu.REG_FILE[i] << "\n";
+        }
+    }
+    Instructions.clear();
     return 0;
 }
