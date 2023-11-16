@@ -22,13 +22,13 @@ enum InsnId_t {
     GENERATE,  // 1r
     B,         // imm
 
-    LOAD,    // 2r
-    STORE,   // 2r
     SWAP,    // 2r
-    SEXT,    // 2r
+    SEXT_FROMBOOL,    // 2r
     ALLOCA,  // 1r imm
     INIT,    // imm imm
 
+    LOAD,          // 3r
+    STORE,         // 3r
     XOR,           // 3r
     MUL,           // 3r
     ADD,           // 3r
@@ -158,15 +158,15 @@ void do_load(CPU *cpu, Instr *instr)
 {
     instr->dump();
     cpu->dump();
-    RegVal_t *ptr = (RegVal_t *)static_cast<intptr_t>(cpu->REG_FILE[instr->m_rs2]);
+    RegVal_t *ptr = (RegVal_t *)static_cast<intptr_t>(cpu->REG_FILE[instr->m_rs2] + cpu->REG_FILE[instr->m_rs3]*sizeof(RegVal_t));
     cpu->REG_FILE[instr->m_rs1] = *ptr;
 }
 void do_store(CPU *cpu, Instr *instr)
 {
     instr->dump();
     cpu->dump();
-    RegVal_t *ptr = (RegVal_t *)static_cast<intptr_t>(cpu->REG_FILE[instr->m_rs1]);
-    *ptr = cpu->REG_FILE[instr->m_rs2];
+    RegVal_t *ptr = (RegVal_t *)static_cast<intptr_t>(cpu->REG_FILE[instr->m_rs1] + cpu->REG_FILE[instr->m_rs2]*sizeof(RegVal_t));
+    *ptr = cpu->REG_FILE[instr->m_rs3];
 }
 void do_swap(CPU *cpu, Instr *instr)
 {
@@ -189,7 +189,7 @@ void do_init(CPU *cpu, Instr *instr)
     cpu->dump();
     init(instr->m_label1, instr->m_label2);
 }
-void do_sext(CPU *cpu, Instr *instr)
+void do_sextFromBool(CPU *cpu, Instr *instr)
 {
     instr->dump();
     cpu->dump();
@@ -327,14 +327,15 @@ int main(int argc, char *argv[])
         if (!name.compare("XOR") || !name.compare("MUL") || !name.compare("MULi") || !name.compare("INC_EQ") ||
             !name.compare("BR_COND") || !name.compare("ADD") || !name.compare("ADDi") ||
             !name.compare("GET_ELEM_PTR") || !name.compare("GET_ELEM_PTRi") || !name.compare("SET_PIXEL") ||
-            !name.compare("MODi") || !name.compare("ICMP_EQ") || !name.compare("SELECT_FALSE") || !name.compare("OR")) {
+            !name.compare("MODi") || !name.compare("ICMP_EQ") || !name.compare("SELECT_FALSE") || !name.compare("OR") ||
+            !name.compare("LOAD") || !name.compare("STORE")) {
             input >> arg >> arg >> arg;
             pc++;
             continue;
         }
         // 2 args
-        if (!name.compare("LOAD") || !name.compare("STORE") || !name.compare("ALLOCA") || !name.compare("SWAP") ||
-            !name.compare("INIT") || !name.compare("SEXT")) {
+        if (!name.compare("ALLOCA") || !name.compare("SWAP") ||
+            !name.compare("INIT") || !name.compare("SEXT_FROMBOOL")) {
             input >> arg >> arg;
             pc++;
             continue;
@@ -396,22 +397,16 @@ int main(int argc, char *argv[])
         }
 
         // 2 registers
-        if (!name.compare("LOAD") || !name.compare("STORE") || !name.compare("SWAP") || !name.compare("SEXT")) {
+        if (!name.compare("SWAP") || !name.compare("SEXT_FROMBOOL")) {
             input >> arg1 >> arg2;
             outs() << " " << arg1 << " " << arg2 << " " << arg3 << "\n";
             RegId_t rs1 = stoi(arg1.erase(0, 1));
             RegId_t rs2 = stoi(arg2.erase(0, 1));
-            if (!name.compare("LOAD")) {
-                Instructions.push_back(new Instr(InsnId_t::LOAD, do_load, name, rs1, rs2));
-            }
-            if (!name.compare("STORE")) {
-                Instructions.push_back(new Instr(InsnId_t::STORE, do_store, name, rs1, rs2));
-            }
             if (!name.compare("SWAP")) {
                 Instructions.push_back(new Instr(InsnId_t::SWAP, do_swap, name, rs1, rs2));
             }
-            if (!name.compare("SEXT")) {
-                Instructions.push_back(new Instr(InsnId_t::SEXT, do_sext, name, rs1, rs2));
+            if (!name.compare("SEXT_FROMBOOL")) {
+                Instructions.push_back(new Instr(InsnId_t::SEXT_FROMBOOL, do_sextFromBool, name, rs1, rs2));
             }
             continue;
         }
@@ -441,13 +436,19 @@ int main(int argc, char *argv[])
         }
 
         // 3 registers
-        if (!name.compare("XOR") || !name.compare("MUL") || !name.compare("ADD") || !name.compare("GET_ELEM_PTR") ||
+        if (!name.compare("LOAD") || !name.compare("STORE") || !name.compare("XOR") || !name.compare("MUL") || !name.compare("ADD") || !name.compare("GET_ELEM_PTR") ||
             !name.compare("SET_PIXEL") || !name.compare("SELECT_FALSE") || !name.compare("OR")) {
             input >> arg1 >> arg2 >> arg3;
             outs() << " " << arg1 << " " << arg2 << " " << arg3 << "\n";
             RegId_t rs1 = stoi(arg1.erase(0, 1));
             RegId_t rs2 = stoi(arg2.erase(0, 1));
             RegId_t rs3 = stoi(arg3.erase(0, 1));
+            if (!name.compare("LOAD")) {
+                Instructions.push_back(new Instr(InsnId_t::LOAD, do_load, name, rs1, rs2, rs3));
+            }
+            if (!name.compare("STORE")) {
+                Instructions.push_back(new Instr(InsnId_t::STORE, do_store, name, rs1, rs2, rs3));
+            }
             if (!name.compare("XOR")) {
                 Instructions.push_back(new Instr(InsnId_t::XOR, do_xor, name, rs1, rs2, rs3));
             }
