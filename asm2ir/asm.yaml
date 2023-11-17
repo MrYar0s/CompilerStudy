@@ -1,47 +1,47 @@
 General design: DestFirst-SourceSecond
 
 Instructions:
-	-	xor
+	- xor
 	Signature: xor x1 x2 x3
 	Description: x1 = x2 ^ x3
 
-	-	b
+	- b
 	Signature: b label
 	Description: jump to label
 
-	-	mul
+	- mul
 	Signature: mul x1 x2 x3
 	Description: x1 = x2 * x3
 
-	-	muli
+	- muli
 	Signature: muli x1 x2 imm
 	Description: x1 = x2 * imm
 
-	-	incEq
+	- incEq
 	Signature: incEq x1 x2 imm
 	Description: x1 = ((x2++) == imm)
 
-	-	brCond
+	- brCond
 	Signature: brCond x1 label1 label2
 	Description: br x1, label1, label2
 
-	-	add
+	- add
 	Signature: add x1 x2 x3
 	Description: x1 = x2 + x3
 
-	-	addi
+	- addi
 	Signature: addi x1 x2 imm
 	Description: x1 = x2 + imm
 
-	-	load
+	- load
 	Signature: load x1 x2 x3
 	Description: load element from array x2 (x3 pos) to x1
 
-	-	init
+	- init
 	Signature: init imm1 imm2
 	Description: initialize the window of imm1Ximm2 size
 
-	-	swap
+	- swap
 	Signature: swap x1 x2
 	Description: swap values of x1 and x2 registers
 
@@ -65,7 +65,7 @@ Instructions:
 	Signature: umodi x1 x2 imm
 	Description: unsigned x1 = x2 % imm
 
-	-	sextFromBool
+	- sextFromBool
 	Signature: sextFromBool x1 x2
 	Description: x2 sign extend to i32 and put into x1
 
@@ -77,7 +77,7 @@ Instructions:
 	Signature: icmpEq eq x1 x2 imm
 	Description: x1 = (x2 == imm)
 
-	-	or
+	- or
 	Signature: or x1 x2 x3
 	Description: x1 = x2 | x3
 

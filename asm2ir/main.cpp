@@ -24,11 +24,11 @@ enum InsnId_t {
 
     SWAP,           // 2r           impl
     SEXT_FROMBOOL,  // 2r           impl
-    ALLOCA,         // 1r imm       
+    ALLOCA,         // 1r imm
     INIT,           // imm imm      lazy
 
-    LOAD,          // 3r            
-    STORE,         // 3r            
+    LOAD,          // 3r
+    STORE,         // 3r
     XOR,           // 3r            impl
     MUL,           // 3r            impl
     ADD,           // 3r            impl
@@ -681,8 +681,7 @@ int main(int argc, char *argv[])
             // arg2
             Value *arg2_p = builder.CreateConstGEP2_64(regFileType, regFile, 0, Instructions[PC]->m_rs3);
             Value *res = builder.CreateSelect(builder.CreateLoad(builder.getInt1Ty(), arg1_p),
-                                              builder.CreateLoad(builder.getInt1Ty(), arg2_p),
-                                              builder.getFalse());
+                                              builder.CreateLoad(builder.getInt1Ty(), arg2_p), builder.getFalse());
             builder.CreateStore(res, res_p);
             continue;
         }
@@ -781,7 +780,8 @@ int main(int argc, char *argv[])
             Value *arg1_p = builder.CreateConstGEP2_64(regFileType, regFile, 0, Instructions[PC]->m_rs2);
             // arg2
             Value *arg2 = builder.getInt64(Instructions[PC]->m_imm);
-            Value *incremented_val = builder.CreateAdd(builder.CreateLoad(builder.getInt64Ty(), arg1_p), builder.getInt64(1));
+            Value *incremented_val =
+                builder.CreateAdd(builder.CreateLoad(builder.getInt64Ty(), arg1_p), builder.getInt64(1));
             builder.CreateStore(incremented_val, arg1_p);
             Value *icmp_eq = builder.CreateICmpEQ(builder.CreateLoad(builder.getInt64Ty(), arg1_p), arg2);
             builder.CreateStore(icmp_eq, res_p);
@@ -832,7 +832,9 @@ int main(int argc, char *argv[])
             // arg2
             Value *arg2_p = builder.CreateConstGEP2_64(regFileType, regFile, 0, Instructions[PC]->m_rs3);
 
-            Value *gep = builder.CreateInBoundsGEP(builder.getInt64Ty(), builder.CreateLoad(Type::getInt64PtrTy(context), arg1_p), builder.CreateLoad(builder.getInt64Ty(), arg2_p));
+            Value *gep = builder.CreateInBoundsGEP(builder.getInt64Ty(),
+                                                   builder.CreateLoad(Type::getInt64PtrTy(context), arg1_p),
+                                                   builder.CreateLoad(builder.getInt64Ty(), arg2_p));
             Value *res = builder.CreateLoad(builder.getInt64Ty(), gep);
             builder.CreateStore(res, res_p);
             continue;
@@ -846,7 +848,9 @@ int main(int argc, char *argv[])
             // arg2
             Value *arg2_p = builder.CreateConstGEP2_64(regFileType, regFile, 0, Instructions[PC]->m_rs3);
 
-            Value *gep = builder.CreateInBoundsGEP(builder.getInt64Ty(), builder.CreateLoad(Type::getInt64PtrTy(context), res_p), builder.CreateLoad(builder.getInt64Ty(), arg1_p));
+            Value *gep =
+                builder.CreateInBoundsGEP(builder.getInt64Ty(), builder.CreateLoad(Type::getInt64PtrTy(context), res_p),
+                                          builder.CreateLoad(builder.getInt64Ty(), arg1_p));
             builder.CreateStore(builder.CreateLoad(Type::getInt64Ty(context), arg2_p), gep);
             continue;
         }
