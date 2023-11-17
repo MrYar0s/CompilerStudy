@@ -17,32 +17,33 @@
 using namespace llvm;
 
 enum InsnId_t {
-    DISPLAY,  // 0
+    DISPLAY,  // 0                  lazy
 
-    GENERATE,  // 1r
-    B,         // imm
+    GENERATE,  // 1r                lazy
+    B,         // imm               impl
 
-    SWAP,           // 2r
-    SEXT_FROMBOOL,  // 2r
-    ALLOCA,         // 1r imm
-    INIT,           // imm imm
+    SWAP,           // 2r           impl
+    SEXT_FROMBOOL,  // 2r           impl
+    ALLOCA,         // 1r imm       
+    INIT,           // imm imm      lazy
 
-    LOAD,          // 3r
-    STORE,         // 3r
-    XOR,           // 3r
-    MUL,           // 3r
-    ADD,           // 3r
-    SET_PIXEL,     // 3r
-    SELECT_FALSE,  // 3r
-    OR,            // 3r
+    LOAD,          // 3r            
+    STORE,         // 3r            
+    XOR,           // 3r            impl
+    MUL,           // 3r            impl
+    ADD,           // 3r            impl
+    SET_PIXEL,     // 3r            lazy
+    SELECT_FALSE,  // 3r            impl
+    OR,            // 3r            impl
 
-    MULi,     // 2r imm
-    INC_EQ,   // 2r imm
-    ADDi,     // 2r imm
-    MODi,     // 2r imm
-    ICMP_EQ,  // 2r imm
+    MULi,     // 2r imm             impl
+    INC_EQ,   // 2r imm             impl
+    ADDi,     // 2r imm             impl
+    SMODi,    // 2r imm             impl
+    UMODi,    // 2r imm             impl
+    ICMP_EQ,  // 2r imm             impl
 
-    BR_COND  // 1r label1 label2
+    BR_COND  // 1r label1 label2    impl
 };
 
 ///////////////////////
@@ -338,7 +339,10 @@ void *lazyFunctionCreator(const std::string &fnName)
     if (fnName == "do_incEq") {
         return reinterpret_cast<void *>(do_incEq);
     }
-    if (fnName == "do_modi") {
+    if (fnName == "do_smodi") {
+        return reinterpret_cast<void *>(do_modi);
+    }
+    if (fnName == "do_umodi") {
         return reinterpret_cast<void *>(do_modi);
     }
     if (fnName == "do_icmpEq") {
@@ -379,8 +383,8 @@ int main(int argc, char *argv[])
         // 3 args
         if (!name.compare("xor") || !name.compare("mul") || !name.compare("muli") || !name.compare("incEq") ||
             !name.compare("brCond") || !name.compare("add") || !name.compare("addi") || !name.compare("setPixel") ||
-            !name.compare("modi") || !name.compare("icmpEq") || !name.compare("selectFalse") || !name.compare("or") ||
-            !name.compare("load") || !name.compare("store")) {
+            !name.compare("smodi") || !name.compare("icmpEq") || !name.compare("selectFalse") || !name.compare("or") ||
+            !name.compare("load") || !name.compare("store") || !name.compare("umodi")) {
             input >> arg >> arg >> arg;
             pc++;
             continue;
@@ -516,14 +520,14 @@ int main(int argc, char *argv[])
                 Instructions.push_back(new Instr(InsnId_t::SELECT_FALSE, do_selectFalse, name, rs1, rs2, rs3));
             }
             if (!name.compare("or")) {
-                Instructions.push_back(new Instr(InsnId_t::XOR, do_or, name, rs1, rs2, rs3));
+                Instructions.push_back(new Instr(InsnId_t::OR, do_or, name, rs1, rs2, rs3));
             }
             continue;
         }
 
         // 2 registers and imm
-        if (!name.compare("muli") || !name.compare("incEq") || !name.compare("addi") || !name.compare("modi") ||
-            !name.compare("icmpEq")) {
+        if (!name.compare("muli") || !name.compare("incEq") || !name.compare("addi") || !name.compare("umodi") ||
+            !name.compare("icmpEq") || !name.compare("smodi")) {
             input >> arg1 >> arg2 >> arg3;
             outs() << " " << arg1 << " " << arg2 << " " << arg3 << "\n";
             RegId_t rs1 = stoi(arg1.erase(0, 1));
@@ -538,8 +542,11 @@ int main(int argc, char *argv[])
             if (!name.compare("addi")) {
                 Instructions.push_back(new Instr(InsnId_t::ADDi, do_addi, name, rs1, rs2, imm));
             }
-            if (!name.compare("modi")) {
-                Instructions.push_back(new Instr(InsnId_t::MODi, do_modi, name, rs1, rs2, imm));
+            if (!name.compare("smodi")) {
+                Instructions.push_back(new Instr(InsnId_t::SMODi, do_modi, name, rs1, rs2, imm));
+            }
+            if (!name.compare("umodi")) {
+                Instructions.push_back(new Instr(InsnId_t::UMODi, do_modi, name, rs1, rs2, imm));
             }
             if (!name.compare("icmpEq")) {
                 Instructions.push_back(new Instr(InsnId_t::ICMP_EQ, do_icmpEq, name, rs1, rs2, imm));
@@ -625,7 +632,6 @@ int main(int argc, char *argv[])
     for (RegVal_t PC = 1; PC < Instructions.size(); PC++) {
         // Set IRBuilder to current BB
         if (BBMap.find(PC) != BBMap.end()) {
-            // builder.CreateBr(BBMap[PC]);
             builder.SetInsertPoint(BBMap[PC]);
         }
         // IR implementation for B instruction
@@ -639,6 +645,71 @@ int main(int argc, char *argv[])
             Value *arg = builder.CreateConstGEP2_64(regFileType, regFile, 0, Instructions[PC]->m_rs1);
             Value *cond = builder.CreateLoad(builder.getInt64Ty(), arg);
             builder.CreateCondBr(cond, BBMap[Instructions[PC]->m_label1], BBMap[Instructions[PC]->m_label2]);
+            continue;
+        }
+        // IR implementation for MUL instruction
+        if (Instructions[PC]->m_ID == MUL) {
+            // res
+            Value *res_p = builder.CreateConstGEP2_64(regFileType, regFile, 0, Instructions[PC]->m_rs1);
+            // arg1
+            Value *arg1_p = builder.CreateConstGEP2_64(regFileType, regFile, 0, Instructions[PC]->m_rs2);
+            // arg2
+            Value *arg2_p = builder.CreateConstGEP2_64(regFileType, regFile, 0, Instructions[PC]->m_rs3);
+            Value *add_arg1_arg2 = builder.CreateMul(builder.CreateLoad(builder.getInt64Ty(), arg1_p),
+                                                     builder.CreateLoad(builder.getInt64Ty(), arg2_p));
+            builder.CreateStore(add_arg1_arg2, res_p);
+            continue;
+        }
+        // IR implementation for MULi instruction
+        if (Instructions[PC]->m_ID == MULi) {
+            // res
+            Value *res_p = builder.CreateConstGEP2_64(regFileType, regFile, 0, Instructions[PC]->m_rs1);
+            // arg1
+            Value *arg1_p = builder.CreateConstGEP2_64(regFileType, regFile, 0, Instructions[PC]->m_rs2);
+            // arg2
+            Value *arg2 = builder.getInt64(Instructions[PC]->m_imm);
+            Value *add_arg1_arg2 = builder.CreateMul(builder.CreateLoad(builder.getInt64Ty(), arg1_p), arg2);
+            builder.CreateStore(add_arg1_arg2, res_p);
+            continue;
+        }
+        // IR implementation for SELECT_FALSE instruction
+        if (Instructions[PC]->m_ID == SELECT_FALSE) {
+            // res
+            Value *res_p = builder.CreateConstGEP2_64(regFileType, regFile, 0, Instructions[PC]->m_rs1);
+            // arg1
+            Value *arg1_p = builder.CreateConstGEP2_64(regFileType, regFile, 0, Instructions[PC]->m_rs2);
+            // arg2
+            Value *arg2_p = builder.CreateConstGEP2_64(regFileType, regFile, 0, Instructions[PC]->m_rs3);
+            Value *res = builder.CreateSelect(builder.CreateLoad(builder.getInt1Ty(), arg1_p),
+                                              builder.CreateLoad(builder.getInt1Ty(), arg2_p),
+                                              builder.getFalse());
+            builder.CreateStore(res, res_p);
+            continue;
+        }
+        // IR implementation for OR instruction
+        if (Instructions[PC]->m_ID == OR) {
+            // res
+            Value *res_p = builder.CreateConstGEP2_64(regFileType, regFile, 0, Instructions[PC]->m_rs1);
+            // arg1
+            Value *arg1_p = builder.CreateConstGEP2_64(regFileType, regFile, 0, Instructions[PC]->m_rs2);
+            // arg2
+            Value *arg2_p = builder.CreateConstGEP2_64(regFileType, regFile, 0, Instructions[PC]->m_rs3);
+            Value *res = builder.CreateOr(builder.CreateLoad(builder.getInt1Ty(), arg1_p),
+                                          builder.CreateLoad(builder.getInt1Ty(), arg2_p));
+            builder.CreateStore(res, res_p);
+            continue;
+        }
+        // IR implementation for XOR instruction
+        if (Instructions[PC]->m_ID == XOR) {
+            // res
+            Value *res_p = builder.CreateConstGEP2_64(regFileType, regFile, 0, Instructions[PC]->m_rs1);
+            // arg1
+            Value *arg1_p = builder.CreateConstGEP2_64(regFileType, regFile, 0, Instructions[PC]->m_rs2);
+            // arg2
+            Value *arg2_p = builder.CreateConstGEP2_64(regFileType, regFile, 0, Instructions[PC]->m_rs3);
+            Value *res = builder.CreateXor(builder.CreateLoad(builder.getInt64Ty(), arg1_p),
+                                           builder.CreateLoad(builder.getInt64Ty(), arg2_p));
+            builder.CreateStore(res, res_p);
             continue;
         }
         // IR implementation for ADD instruction
@@ -664,6 +735,119 @@ int main(int argc, char *argv[])
             Value *arg2 = builder.getInt64(Instructions[PC]->m_imm);
             Value *add_arg1_arg2 = builder.CreateAdd(builder.CreateLoad(builder.getInt64Ty(), arg1_p), arg2);
             builder.CreateStore(add_arg1_arg2, res_p);
+            continue;
+        }
+        // IR implementation for SMODi instruction
+        if (Instructions[PC]->m_ID == SMODi) {
+            // res
+            Value *res_p = builder.CreateConstGEP2_64(regFileType, regFile, 0, Instructions[PC]->m_rs1);
+            // arg1
+            Value *arg1_p = builder.CreateConstGEP2_64(regFileType, regFile, 0, Instructions[PC]->m_rs2);
+            // arg2
+            Value *arg2 = builder.getInt64(Instructions[PC]->m_imm);
+            Value *smodi = builder.CreateSRem(builder.CreateLoad(builder.getInt64Ty(), arg1_p), arg2);
+            builder.CreateStore(smodi, res_p);
+            continue;
+        }
+        // IR implementation for UMODi instruction
+        if (Instructions[PC]->m_ID == UMODi) {
+            // res
+            Value *res_p = builder.CreateConstGEP2_64(regFileType, regFile, 0, Instructions[PC]->m_rs1);
+            // arg1
+            Value *arg1_p = builder.CreateConstGEP2_64(regFileType, regFile, 0, Instructions[PC]->m_rs2);
+            // arg2
+            Value *arg2 = builder.getInt64(Instructions[PC]->m_imm);
+            Value *smodi = builder.CreateURem(builder.CreateLoad(builder.getInt64Ty(), arg1_p), arg2);
+            builder.CreateStore(smodi, res_p);
+            continue;
+        }
+        // IR implementation for ICMP_EQ instruction
+        if (Instructions[PC]->m_ID == ICMP_EQ) {
+            // res
+            Value *res_p = builder.CreateConstGEP2_64(regFileType, regFile, 0, Instructions[PC]->m_rs1);
+            // arg1
+            Value *arg1_p = builder.CreateConstGEP2_64(regFileType, regFile, 0, Instructions[PC]->m_rs2);
+            // arg2
+            Value *arg2 = builder.getInt64(Instructions[PC]->m_imm);
+            Value *icmp_eq = builder.CreateICmpEQ(builder.CreateLoad(builder.getInt64Ty(), arg1_p), arg2);
+            builder.CreateStore(icmp_eq, res_p);
+            continue;
+        }
+        // IR implementation for INC_EQ instruction
+        if (Instructions[PC]->m_ID == INC_EQ) {
+            // res
+            Value *res_p = builder.CreateConstGEP2_64(regFileType, regFile, 0, Instructions[PC]->m_rs1);
+            // arg1
+            Value *arg1_p = builder.CreateConstGEP2_64(regFileType, regFile, 0, Instructions[PC]->m_rs2);
+            // arg2
+            Value *arg2 = builder.getInt64(Instructions[PC]->m_imm);
+            Value *incremented_val = builder.CreateAdd(builder.CreateLoad(builder.getInt64Ty(), arg1_p), builder.getInt64(1));
+            builder.CreateStore(incremented_val, arg1_p);
+            Value *icmp_eq = builder.CreateICmpEQ(builder.CreateLoad(builder.getInt64Ty(), arg1_p), arg2);
+            builder.CreateStore(icmp_eq, res_p);
+            continue;
+        }
+        // IR implementation for SEXT_FROMBOOL instruction
+        if (Instructions[PC]->m_ID == SEXT_FROMBOOL) {
+            // res
+            Value *res_p = builder.CreateConstGEP2_64(regFileType, regFile, 0, Instructions[PC]->m_rs1);
+            // arg1
+            Value *arg1_p = builder.CreateConstGEP2_64(regFileType, regFile, 0, Instructions[PC]->m_rs2);
+            Value *sext = builder.CreateSExt(builder.CreateLoad(builder.getInt1Ty(), arg1_p), builder.getInt64Ty());
+            builder.CreateStore(sext, res_p);
+            continue;
+        }
+        // IR implementation for SWAP instruction
+        if (Instructions[PC]->m_ID == SWAP) {
+            // arg1
+            Value *arg1_p = builder.CreateConstGEP2_64(regFileType, regFile, 0, Instructions[PC]->m_rs1);
+            // arg2
+            Value *arg2_p = builder.CreateConstGEP2_64(regFileType, regFile, 0, Instructions[PC]->m_rs2);
+            Value *tmp = builder.CreateLoad(builder.getInt64Ty(), arg1_p);
+            Value *arg2 = builder.CreateLoad(builder.getInt64Ty(), arg2_p);
+            builder.CreateStore(arg2, arg1_p);
+            builder.CreateStore(tmp, arg2_p);
+            continue;
+        }
+        // IR implementation for ALLOCA instruction
+        if (Instructions[PC]->m_ID == ALLOCA) {
+            // res
+            Value *res_p = builder.CreateConstGEP2_64(regFileType, regFile, 0, Instructions[PC]->m_rs1);
+            // imm
+            Value *imm = builder.getInt64(Instructions[PC]->m_imm);
+            Type *ArrayTy = ArrayType::get(builder.getInt64Ty(), static_cast<ConstantInt *>(imm)->getZExtValue());
+            Value *alloc = builder.CreateAlloca(ArrayTy);
+            // std::vector<Value *> Idxs = {builder.getInt64(0), builder.getInt64(0)};
+            // Value *gep = builder.CreateInBoundsGEP(ArrayTy, alloc, Idxs);
+            // builder.CreateStore(gep, res_p);
+            builder.CreateStore(alloc, res_p);
+            continue;
+        }
+        // IR implementation for LOAD instruction
+        if (Instructions[PC]->m_ID == LOAD) {
+            // res
+            Value *res_p = builder.CreateConstGEP2_64(regFileType, regFile, 0, Instructions[PC]->m_rs1);
+            // arg1
+            Value *arg1_p = builder.CreateConstGEP2_64(regFileType, regFile, 0, Instructions[PC]->m_rs2);
+            // arg2
+            Value *arg2_p = builder.CreateConstGEP2_64(regFileType, regFile, 0, Instructions[PC]->m_rs3);
+
+            Value *gep = builder.CreateInBoundsGEP(builder.getInt64Ty(), builder.CreateLoad(Type::getInt64PtrTy(context), arg1_p), builder.CreateLoad(builder.getInt64Ty(), arg2_p));
+            Value *res = builder.CreateLoad(builder.getInt64Ty(), gep);
+            builder.CreateStore(res, res_p);
+            continue;
+        }
+        // IR implementation for STORE instruction
+        if (Instructions[PC]->m_ID == STORE) {
+            // res
+            Value *res_p = builder.CreateConstGEP2_64(regFileType, regFile, 0, Instructions[PC]->m_rs1);
+            // arg1
+            Value *arg1_p = builder.CreateConstGEP2_64(regFileType, regFile, 0, Instructions[PC]->m_rs2);
+            // arg2
+            Value *arg2_p = builder.CreateConstGEP2_64(regFileType, regFile, 0, Instructions[PC]->m_rs3);
+
+            Value *gep = builder.CreateInBoundsGEP(builder.getInt64Ty(), builder.CreateLoad(Type::getInt64PtrTy(context), res_p), builder.CreateLoad(builder.getInt64Ty(), arg1_p));
+            builder.CreateStore(builder.CreateLoad(Type::getInt64Ty(context), arg2_p), gep);
             continue;
         }
         // Get poointer to instruction for function args
@@ -692,7 +876,7 @@ int main(int argc, char *argv[])
         ArrayRef<GenericValue> noargs;
 
         cpu.RUN = 1;
-        cpu.PC = 1;
+        cpu.PC = 0;
         ee->runFunction(mainFunc, noargs);
         outs() << "#[LLVM EE] END\n";
 
