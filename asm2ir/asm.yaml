@@ -1,90 +1,90 @@
 General design: DestFirst-SourceSecond
 
 Instructions:
-	-	XOR
-	Signature: XOR x1 x2 x3
+	-	xor
+	Signature: xor x1 x2 x3
 	Description: x1 = x2 ^ x3
 
-	-	B
-	Signature: B label
+	-	b
+	Signature: b label
 	Description: jump to label
 
-	-	MUL
-	Signature: MULi x1 x2 x3
+	-	mul
+	Signature: mul x1 x2 x3
 	Description: x1 = x2 * x3
 
-	-	MULi
-	Signature: MULi x1 x2 imm
+	-	muli
+	Signature: muli x1 x2 imm
 	Description: x1 = x2 * imm
 
-	-	INC_EQ
-	Signature: INC_EQ x1 x2 imm
+	-	incEq
+	Signature: incEq x1 x2 imm
 	Description: x1 = ((x2++) == imm)
 
-	-	BR_COND
-	Signature: BR_COND x1 label1 label2
+	-	brCond
+	Signature: brCond x1 label1 label2
 	Description: br x1, label1, label2
 
-	-	ADD
-	Signature: ADD x1 x2 x3
+	-	add
+	Signature: add x1 x2 x3
 	Description: x1 = x2 + x3
 
-	-	ADDi
-	Signature: ADD x1 x2 imm
+	-	addi
+	Signature: addi x1 x2 imm
 	Description: x1 = x2 + imm
 
-	-	LOAD
-	Signature: LOAD x1 x2 x3
+	-	load
+	Signature: load x1 x2 x3
 	Description: load element from array x2 (x3 pos) to x1
 
-	-	SET_PIXEL
-	Signature: SET_PIXEL x1 x2 x3
-	Description: call set_pixel x1, x2, x3
-
-	-	INIT
-	Signature: INIT imm1 imm2
+	-	init
+	Signature: init imm1 imm2
 	Description: initialize the window of imm1Ximm2 size
 
-	-	SWAP
-	Signature: SWAP x1 x2
+	-	swap
+	Signature: swap x1 x2
 	Description: swap values of x1 and x2 registers
 
-	- DISPLAY
-	Signature: DISPLAY
+	- display
+	Signature: display
 	Description: display the buffer which was fulled by SET_PIXEL
 
-	- GENERATE
-	Signature: GENERATE x1
+	- generate
+	Signature: generate x1
 	Description: generate random value and put it into x1
 
-	- SET_PIXEL
-	Signature: SET_PIXEL x1 x2 x3
+	- setPixel
+	Signature: setPixel x1 x2 x3
 	Description: set pixel value x3 on the position (x1,x2) -> (x,y)
 
-	- MODi
-	Signature: MODi x1 x2 imm
-	Description: x1 = x2 % imm
+	- smodi
+	Signature: smodi x1 x2 imm
+	Description: signed x1 = x2 % imm
 
-	-	SEXT_FROMBOOL
-	Signature: SEXT x1 x2
+	- umodi
+	Signature: umodi x1 x2 imm
+	Description: unsigned x1 = x2 % imm
+
+	-	sextFromBool
+	Signature: sextFromBool x1 x2
 	Description: x2 sign extend to i32 and put into x1
 
-	- SELECT_FALSE
-	Signature: SELECT_FALSE x1 x2 x3
+	- selectFalse
+	Signature: selectFalse x1 x2 x3
 	Description: x1 = if (x2) { x3 } else { false }
 
-	- ICMP_EQ
-	Signature: icmp eq x1 x2 imm
+	- icmpEq
+	Signature: icmpEq eq x1 x2 imm
 	Description: x1 = (x2 == imm)
 
-	-	OR
-	Signature: OR x1 x2 x3
+	-	or
+	Signature: or x1 x2 x3
 	Description: x1 = x2 | x3
 
-	- STORE
-	Signature: STORE x1 x2 x3
+	- store
+	Signature: store x1 x2 x3
 	Description: store element to array x1 (x2 pos) from x3
 
-	- ALLOCA
+	- alloca
 	Signature: ALLOCA_I32 x1 size
 	Description: allocate array with type i32 with size and put pointer in x1

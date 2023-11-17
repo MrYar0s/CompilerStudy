@@ -36,7 +36,7 @@ main_label_3
 	brCond x13 main_label_2 main_label_1
 main_label_4
 	generate x8
-	modi x8 x8 2
+	smodi x8 x8 2
 	add x9 x7 x5
 	store x1 x9 x8
 	incEq x13 x7 400
@@ -48,13 +48,13 @@ calc_label_1
 	xor x12 x12 x12
 	muli x14 x11 400
 	addi x15 x11 399
-	modi x15 x15 400
+	umodi x15 x15 400
 	muli x15 x15 400
 	addi x16 x11 400
-	modi x16 x16 400
+	umodi x16 x16 400
 	muli x16 x16 400
 	addi x17 x11 401
-	modi x17 x17 400
+	umodi x17 x17 400
 	muli x17 x17 400
 	b calc_label_4
 calc_label_2
@@ -69,17 +69,17 @@ calc_label_4
 	icmpEq x20 x19 1
 	sextFromBool x37 x20
 	addi x22 x12 399
-	modi x22 x22 400
+	umodi x22 x22 400
 	add x23 x15 x22
 	load x23 x1 x23
 	add x37 x23 x37
 	addi x24 x12 400
-	modi x24 x24 400
+	umodi x24 x24 400
 	add x25 x15 x24
 	load x25 x1 x25
 	add x37 x25 x37
 	addi x26 x12 401
-	modi x26 x26 400
+	umodi x26 x26 400
 	add x27 x15 x26
 	load x27 x1 x27
 	add x37 x27 x37
