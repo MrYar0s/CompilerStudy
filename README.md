@@ -7,6 +7,8 @@ Repository for compiler course
 
 [Third task](#3rd)
 
+[Fourth task](#4th)
+
 For project configuration execute these commands from this repo root:
 
 `mkdir build && cd build`
@@ -36,3 +38,12 @@ Here you can see plots with patterns which were detected after run app with libL
 Implemented LLVM IR generator and got output similar like in main.ll
 
 To get generated LLVM IR run target `get_llvm_app_ir` (`make get_llvm_app_ir`), to run interpreter run target `run_llvm_app` (`make run_llvm_app`)
+
+## Fourth task <a name="4th"></a>
+Developed own ISA (similar to LLVM IR), implemented "Game Of Life" by my ISA. Wrote handlers for all instructions from ISA, developed simulator to run this application. And finaly implemented generation of LLVM IR equivalent of my application, and you able to run interpreter on this LLVM IR.
+
+To see dump of ASM2IR run target `dump_asm2ir` (`make dump_asm2ir`)
+
+To run simulator of ASM run target `run_asm` (`make run_asm`)
+
+To run interpreter of LLVM IR run target `run_ir` (`make run_ir`)
